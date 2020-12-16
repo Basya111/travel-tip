@@ -1,6 +1,7 @@
 
 export const locationService = {
     getPos,
+    getPosName,
     getLocations,
     showLocation,
     handleLocationError,
@@ -24,6 +25,11 @@ export function getPos(url) {
     return axios.get(url)
         .then(res => res.data)
         .then(data => data.results[0].geometry.location)
+}
+export function getPosName(url) {
+    return axios.get(url)
+        .then(res => res.data)
+        .then(data => data.results[0].formatted_address)
 }
 
 function getLocations() {

@@ -1,11 +1,7 @@
-
 import { locationService } from './services/location-service.js'
 
 const KEY = 'AIzaSyAW0VHtJ_ObPHzi_jtsYKaB9vJgarQC4po'
 var gCurrLocation;
-
-console.log('locationService', locationService);
-
 var gGoogleMap;
 
 window.onload = () => {
@@ -15,15 +11,10 @@ window.onload = () => {
     const { lat, lng } = (latUrl && lngUrl) ? { lat: latUrl, lng: lngUrl } : { lat: 32.0749831, lng: 34.9120554 };
     initMap(+lat, +lng)
         .then(() => {
-
-
-            gCurrLocation = 'Petach-Tikva'
-            addMarker({ lat: 32.0749831, lng: 34.9120554 });
+            gCurrLocation = 'Petach-Tikva';
+            // addMarker({ lat: 32.0749831, lng: 34.9120554 });
         })
         .catch(console.log('INIT MAP ERROR'));
-
-
-
     const elBtnHome = document.querySelector('.home-btn');
     elBtnHome.addEventListener('click', onGoHome);
 
@@ -57,34 +48,38 @@ window.onload = () => {
 function onCopyLocation() {
     const googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${gCurrLocation}&key=${KEY}`
     locationService.getPos(googleGoToUrl)
-        .then( pos => {
-            console.log( 'FFFFFFFF',pos)
+        .then(pos => {
+            console.log('FFFFFFFF', pos)
             document.querySelector('.copied-link').innerText = `https://basya111.github.io/travel-tip/?lat=${pos.lat}&lng=${pos.lng}`
         })
 
 }
 
 export function initMap(lat = 32.0749831, lng = 34.9120554) {
-    console.log('InitMap');
     return _connectGoogleApi()
         .then(() => {
-            console.log('google available');
             gGoogleMap = new google.maps.Map(
                 document.querySelector('#map'), {
                 center: { lat, lng },
                 zoom: 15
             })
-            console.log('Map!', gGoogleMap);
-
             gGoogleMap.addListener('click', (ev) => {
-                console.log('Map clicked', ev);
-                const placeName = prompt('Place name?')
-                if (!placeName) return;
-                gCurrLocation = placeName;
-                locationService.savePlace(gCurrLocation, ev.latLng.lat(), ev.latLng.lng())
-                console.log('Map clicked', gCurrLocation, ev.latLng.lat(), ev.latLng.lng());
-                renderPlaces(gCurrLocation, ev.latLng.lat(), ev.latLng.lng())
-                document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
+                let { lat, lng } = {lat:ev.latLng.lat(), lng:ev.latLng.lng()}
+                const googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${KEY}`
+                locationService.getPosName(googleGoToUrl)
+                .then(address => {
+                    gCurrLocation = address;
+                    document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
+                    if (confirm('Save location ?')) {
+                        locationService.savePlace(gCurrLocation, lat, lng)
+                        renderPlaces(gCurrLocation, lat, lng)
+                    }
+                })
+                 
+                // if (!placeName) return;
+                // gCurrLocation = placeName;
+                console.log('Map clicked', gCurrLocation, lat, lng);
+                // document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
             })
         })
 }
@@ -111,7 +106,13 @@ function onGoHome() {
         .then(pos => {
             console.log('User position is:', pos.coords);
             var position = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-            panTo(pos.coords.latitude, pos.coords.longitude)
+            const googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.lat},${position.lng}&key=${KEY}`
+            locationService.getPosName(googleGoToUrl)
+                .then(address => {
+                    gCurrLocation = address;
+                    document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
+                })
+            panTo(position.lat, position.lng)
             addMarker(position)
         })
         .catch(err => {
@@ -130,7 +131,6 @@ function getUserPosition() {
 
 function _connectGoogleApi() {
     if (window.google) return Promise.resolve()
-    // const API_KEY = 'AIzaSyDLOgg8zvYAvrFZFqiCJErIweRG7c7suhM';
     var elGoogleApi = document.createElement('script');
     elGoogleApi.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}`;
     elGoogleApi.async = true;
@@ -149,11 +149,10 @@ function renderPlaces() {
     <div class="place-img"><img src="img/navigation.png" /></div>
     <div class = "place-name">${place.placeName}</div>
     <div><button class="del-btn">x</button></div></div>`)
-    console.log(strHtmls, elListPlace);
     var strHtml = strHtmls.join('')
     elListPlace.innerHTML = strHtml;
 
-    var elPlaces = document.querySelectorAll('.place')
+    var elPlaces = document.querySelectorAll('.place-img')
     elPlaces.forEach((elPlace, idx) => {
         elPlace.addEventListener('click', () => {
             onNavigate(places[idx].lat, places[idx].lng)
@@ -175,6 +174,12 @@ function onDeletePlace(placeId) {
 
 function onNavigate(lat, lng) {
     console.log('lat', lat, 'lng', lng);
+    const googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${KEY}`
+    locationService.getPosName(googleGoToUrl)
+        .then(address => {
+            gCurrLocation = address;
+            document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
+        })
     initMap(lat, lng);
 }
 
