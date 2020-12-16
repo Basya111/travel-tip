@@ -59,7 +59,7 @@ function onCopyLocation() {
     locationService.getPos(googleGoToUrl)
         .then( pos => {
             console.log( 'FFFFFFFF',pos)
-            document.querySelector('.copied-link').innerText = `http://127.0.0.1:5503/index.html?lat=${pos.lat}&lng=${pos.lng}`
+            document.querySelector('.copied-link').innerText = `https://basya111.github.io/travel-tip/?lat=${pos.lat}&lng=${pos.lng}`
         })
 
 }
