@@ -4,12 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel-tip</title>
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <h1>ES6</h1>
-    <div id="map" style="width: 100%; height: 400px;"></div>
-    <button class="btn">Click Me</button>
-    
+    <header class="main-header flex space-between">
+        <h1>Travel Tip</h1>
+        <div class="side-header flex space-between">
+            <input type="text" placeholder="Enter location" name="destination">
+            <button class="nav-to-btn">GO</button>
+            <button class="home-btn">My Location</button>
+
+        </div>
+        
+    </header>
+
+    <main>
+        <div class="curr-location flex space-between">
+            <h2></h2>
+            <button class="copy-btn">Copy location</button>
+        </div>
+        <div class="main-content">
+            <div class="weather">weather</div>
+            <div id="map" style="width: 100%; height: 520px;" class="map"></div>
+
+            <div class="places">
+                <ul class="list-places"></ul>
+            </div>
+
+
+        </div>
+    </main>
+    <!-- <button class="btn">Click Me</button> -->
+    <script src="js/lib/axios.js"></script>
     <script type="module" src="js/map-controller.js"></script>
 </body>
 </html>
