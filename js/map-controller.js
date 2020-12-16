@@ -1,14 +1,23 @@
 
 import { locationService } from './services/location-service.js'
 
+const KEY = 'AIzaSyAW0VHtJ_ObPHzi_jtsYKaB9vJgarQC4po'
+var gCurrLocation;
 
 console.log('locationService', locationService);
 
 var gGoogleMap;
 
 window.onload = () => {
-    initMap()
+    const urlParams = new URLSearchParams(window.location.search);
+    const latUrl = urlParams.get('lat');
+    const lngUrl = urlParams.get('lng');
+    const { lat, lng } = (latUrl && lngUrl) ? { lat: latUrl, lng: lngUrl } : { lat: 32.0749831, lng: 34.9120554 };
+    initMap(+lat, +lng)
         .then(() => {
+
+
+            gCurrLocation = 'Petach-Tikva'
             addMarker({ lat: 32.0749831, lng: 34.9120554 });
         })
         .catch(console.log('INIT MAP ERROR'));
@@ -16,33 +25,44 @@ window.onload = () => {
 
 
     const elBtnHome = document.querySelector('.home-btn');
-
     elBtnHome.addEventListener('click', onGoHome);
 
 
 
 
     document.querySelector('.nav-to-btn').addEventListener('click', (ev) => {
-        var destLocation = document.querySelector('input[name=destination]').value
+        gCurrLocation = document.querySelector('input[name=destination]').value
         // todo API google geo code get lat, lng
-        var googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${destLocation}&key=AIzaSyAW0VHtJ_ObPHzi_jtsYKaB9vJgarQC4po`
-        var prmGoTo = locationService.getData(googleGoToUrl)
-            .then(data => data.results[0].geometry.location)
+        const googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${gCurrLocation}&key=${KEY}`
+        var prmGoTo = locationService.getPos(googleGoToUrl)
             .then(pos => {
                 panTo(pos.lat, pos.lng);
                 addMarker(pos)
 
             })
         console.log('Aha!', prmGoTo);
+        document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
         document.querySelector('input[name=destination]').value = ''
     })
+
+    const elBtnCopy = document.querySelector('.copy-btn');
+    elBtnCopy.addEventListener('click', onCopyLocation);
+
 
     locationService.createPlaces()
     renderPlaces()
 }
 
 
+function onCopyLocation() {
+    const googleGoToUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${gCurrLocation}&key=${KEY}`
+    locationService.getPos(googleGoToUrl)
+        .then( pos => {
+            console.log( 'FFFFFFFF',pos)
+            document.querySelector('.copied-link').innerText = `http://127.0.0.1:5503/index.html?lat=${pos.lat}&lng=${pos.lng}`
+        })
 
+}
 
 export function initMap(lat = 32.0749831, lng = 34.9120554) {
     console.log('InitMap');
@@ -60,9 +80,11 @@ export function initMap(lat = 32.0749831, lng = 34.9120554) {
                 console.log('Map clicked', ev);
                 const placeName = prompt('Place name?')
                 if (!placeName) return;
-                locationService.savePlace(placeName, ev.latLng.lat(), ev.latLng.lng())
-                console.log('Map clicked', placeName, ev.latLng.lat(), ev.latLng.lng());
-                renderPlaces(placeName, ev.latLng.lat(), ev.latLng.lng())
+                gCurrLocation = placeName;
+                locationService.savePlace(gCurrLocation, ev.latLng.lat(), ev.latLng.lng())
+                console.log('Map clicked', gCurrLocation, ev.latLng.lat(), ev.latLng.lng());
+                renderPlaces(gCurrLocation, ev.latLng.lat(), ev.latLng.lng())
+                document.querySelector('.curr-location h2').innerText = `Location: ${gCurrLocation}`
             })
         })
 }
@@ -83,6 +105,7 @@ function panTo(lat, lng) {
     gGoogleMap.panTo(laLatLng);
 }
 
+// TODO: call API to get location name from lat/lng and update gCurrLocation
 function onGoHome() {
     getUserPosition()
         .then(pos => {
@@ -107,9 +130,9 @@ function getUserPosition() {
 
 function _connectGoogleApi() {
     if (window.google) return Promise.resolve()
-    const API_KEY = 'AIzaSyDLOgg8zvYAvrFZFqiCJErIweRG7c7suhM';
+    // const API_KEY = 'AIzaSyDLOgg8zvYAvrFZFqiCJErIweRG7c7suhM';
     var elGoogleApi = document.createElement('script');
-    elGoogleApi.src = `https://maps.googleapis.com/maps/api/js?key=${API_KEY}`;
+    elGoogleApi.src = `https://maps.googleapis.com/maps/api/js?key=${KEY}`;
     elGoogleApi.async = true;
     document.body.append(elGoogleApi);
 
@@ -126,8 +149,6 @@ function renderPlaces() {
     <div class="place-img"><img src="img/navigation.png" /></div>
     <div class = "place-name">${place.placeName}</div>
     <div><button class="del-btn">x</button></div></div>`)
-    // var strHtmls = places.map(place => `<div class="place"><button onclick="onNavigate(${place.lat},${place.lng})"><img src = "img/navigation.jpg"></button>
-    // ${place.placeName}<button onclick="onDeletePlace(${place.id})">x</button></div>`)
     console.log(strHtmls, elListPlace);
     var strHtml = strHtmls.join('')
     elListPlace.innerHTML = strHtml;

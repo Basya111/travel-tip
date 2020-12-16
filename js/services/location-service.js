@@ -1,6 +1,6 @@
 
 export const locationService = {
-    getData,
+    getPos,
     getLocations,
     showLocation,
     handleLocationError,
@@ -20,9 +20,10 @@ var gNextId;
 
 const  gLocations = [{lat: 17, lng: 19, name: 'Puki Home'}];
 
-export function getData(url) {
+export function getPos(url) {
     return axios.get(url)
         .then(res => res.data)
+        .then(data => data.results[0].geometry.location)
 }
 
 function getLocations() {
