@@ -1,6 +1,6 @@
 import { locationService } from './services/location-service.js'
 
-const KEY = 'AIzaSyAW0VHtJ_ObPHzi_jtsYKaB9vJgarQC4po'
+
 var gCurrLocation;
 var gGoogleMap;
 
